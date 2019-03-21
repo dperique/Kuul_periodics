@@ -58,6 +58,11 @@ and the Kuul Images separate.  The Kuul Periodics system just runs the image and
 what it does.  I expect people to use the Kuul Periodics system but to have a separate repo
 and build process for their custom Kuul Images.
 
+Login to your image using something like this:
+  * ssh-keygen -f "/home/bonnyci/.ssh/known_hosts" -R [localhost]:2024
+    * This gets rid of the old key from your known_hosts file
+  * ssh -p 2024 -i junk.id_rsa myuser@localhost
+
 ## Kuul k8s cluster
 
 Once you have Kuul Images that you want to run, you will have to create a k8s cluster upon
@@ -90,9 +95,11 @@ much like processes that run using Linux cron.
 
 The jobs are specified in yamls.  The lifecycle goes something like this:
 
-* Create a yaml template for certain jobs
+* Create a yaml template for certain jobs; use names that help you uniquely identify jobs
+  so that you can easily delete them by filtering them effectively (for example by using
+  the `grep` command)
 * Instantiate that template
-* `kubectl config use-context <aK8s>` for your Kuul k8s cluster
+* `kubectl config use-context (aK8s)` for your Kuul k8s cluster
 * `kubectl apply -f .` your templates
 *   If a template needs changing, change it and "redeploy" your yamls
 * Let the jobs run
@@ -120,5 +127,29 @@ If you want to:
     * look for `schedule` to set a cron-like schedule
     * look for `concurrencyPolicy` to set whether you're ok with "overlapping" jobs
     * look for `nodeSelector` to pick which k8s node you want to run your jobs on
+      * Use `kubectl label node --overwrite (aNode) myTag=label` to label your node
 
+## Utilities
 
+This is how I check the labels on my k8s nodes:
+
+```
+# Label some nodes.
+#
+kubectl label node --overwrite node-1 myTag=periodic`
+kubectl label node --overwrite node-3 myTag=periodic`
+
+# Grep the for the label to quickly see what nodes are using that label.
+#
+for i in 1 2 3 4 5 ; do echo $i ;kubectl describe node node-$i | grep periodic ; done
+```
+
+How I get rid of old and Completed Jobs.  The `str1` and `str2` are strings used to uniquely
+identify Pods that are Jobs that are ok to delete.
+
+```
+for i in $(kubectl get po -a| grep Completed|awk '{print $1}' | grep -e str1 -e str2 ) ; do
+  echo $i
+  kubectl delete po $i
+done
+```
