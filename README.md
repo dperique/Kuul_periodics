@@ -21,22 +21,58 @@ Kubernetes is a nice platform for running containers.  My thought is that nodepo
 can be slimmed down into containers and instead of running VMs on Openstack, we can run the
 containers on Kubernetes -- hence the name Kuul as a play on the word Zuul.
 
+## Jobs are implemented as Kubernetes CronJobs
+
+The periodic jobs are implemented as Kubernetes CronJobs.  This allow us to:
+
+* Run containers on a certain schedule (like what we can do with cron)
+* Retain jobs that finished (including logs).  After the jobs are done, the pods are
+  left behind by default.  You can retrieve the logs as needed and "page throught" different
+  pods/jobs that ran in the past to help you see how things may have changes (in the case
+  where you are trying to figure out when something stopped working).  The number of failed
+  and succeeded jobs retained is configurable and you can delete the pods when you need to --
+  for example, when you don't need them anymore or if they consume too many resources.
+* Use nodeSelectors to choose which k8s nodes the jobs run on.
+* Have control to prevent a job from running again when the current one has not finished.
+  This feature is what I need when running regular cron because if a job is already running
+  and it's time to launch another job, cron will launch it regardless of if the current job
+  is running or not.
+* Use `kubectl editi ...` or `kubectl apply ...` to
+  * Suspend periodic jobs by changing the `suspend` pod parameter. This allows us to
+    quickly suspend and resume jobs for scheduling.  This is useful when you need to perform
+    maintenance and want to stop running the periodic jobs and then to resume them when the
+    maintenance is complete.
+* Change the job schedule by changing the `schedule` parameter.  This is useful when you want
+  to run a job immediately to debug it (just change the `schedule` parameter to the next minute)
+  or when you want to just re-arrange the schedule.
+
 ## Kuul Images
 
 Every periodic job needs a docker image.  I call these images "Kuul Images".  For whatever
-script you want to run, create your container for it -- try to make it as small as possible.
+script you want to run, create your container for it -- try to make the container small as
+possible to help with scalability.  You will also need a docker registry where you can
+push your images and where Kubernetes can pull the images from.
+
+The container can run arbitray things.  I like to keep the implementation of the Kuul Periodics
+and the Kuul Images separate.  The Kuul Periodics system just runs the image and does not care
+what it does.  I expect people to use the Kuul Periodics system but to have a separate repo
+and build process for their custom Kuul Images.
 
 ## Kuul k8s cluster
 
-Once you have docker images that you want to run, you will have to create a k8s cluster upon
+Once you have Kuul Images that you want to run, you will have to create a k8s cluster upon
 which to run them.  I call this the "Kuul k8s cluster".
 
 If you want to have multiple Kuul k8s clusters, go ahead and make them.  This will be good
-for having more than one Kuul system to run your periodic jobs - in case one of them has
-a problem or you want to experiment with one without affecting another one supporting, say,
-production operations.
+for having more than one Kuul system to run your periodic jobs for the following reasons:
 
-Also, the Kuul k8s cluster can be made up of different types of k8s nodes; each node can have
+* In case one of your Kuul Periodic Systems has a problem and becomes unusable (this eliminates
+  a single point of failure for running periodic jobs)
+* You want to experiment with something without affecting another Kuul Periodic System that is
+  running jobs for production operations.
+* You just want a separate system for other reasons.
+
+The Kuul k8s cluster can be made up of different types of k8s nodes; each node can have
 certain characteristics.  For example:
 
 * nodes that can talk to "internal only" environments (staging, dev) and can access only
@@ -44,23 +80,45 @@ certain characteristics.  For example:
 * nodes that can talk to production environments and can access production networks.
 
 We use the concept of nodeSelector in Kubernetes to let periodic jobs land on certain k8s
-nodes as we see fit.
+nodes as we see fit.  We also use the Pod constructs to limit cpu and memory of the jobs to
+avoid runaway jobs consuming too many resources.
 
-## Yamls and the Kubernetes cronjob
+## Yamls and the Kubernetes CronJobs
 
 We implement periodic jobs uring the Kubernetes cronjob construct.  This contruct is very
 much like processes that run using Linux cron.
 
-We are setup the yamls so that we are careful to select the k8s nodes upon which to run and
-limit how much CPU and RAM we allow the jobs to use.
+The jobs are specified in yamls.  The lifecycle goes something like this:
 
-## Monitoring your jobs
+* Create a yaml template for certain jobs
+* Instantiate that template
+* `kubectl config use-context <aK8s>` for your Kuul k8s cluster
+* `kubectl apply -f .` your templates
+*   If a template needs changing, change it and "redeploy" your yamls
+* Let the jobs run
+* Look at logs of previous jobs or forward the logs to a logserver for persistent storage
+* Delete any old Jobs and Pods you don't need
+* If your Kuul k8s cluster needs more resources, add more k8s nodes
 
-We monitor our jobs using kubectl commands.  This makes sense because the jobs are really
-Kubernetes jobs which are really Kubernetes pods.
+## Monitoring and Editing Your Jobs
 
-In order to monitor the pods in a more user friendly way, we use k9s.  If you want to see
-the logs of runnign jobs, just use k9s commands to see the logs.  If you want to edit the
-periodic jobs (including their schedule), just edit the cronjob construct using k9s.  K9s is
-a nice too to use but there is nothing preventing you from just doing the same things with
-the kubectl command.
+We monitor our jobs using `kubectl` commands.  This makes sense because the jobs are really
+Kubernetes Jobs which are really Kubernetes Pods.
+
+In order to monitor the Pods in a more user friendly way, we can use the
+[Kubernetes dashboard](https://github.com/kubernetes/dashboard)
+or a tool like [k9s](https://github.com/derailed/k9s). But either way, you are still using
+the `kubectl` command to manage the Jobs.
+
+If you want to:
+
+* see the logs of running Jobs, just use k9s commands to see the logs
+  * or `kubectl logs ...`
+* edit the periodic jobs (including their schedule), just edit the CronJob construct using k9s
+  * or `kubectl edit ...`
+    * look for `suspend` variable set to `true` or `false` to suspend or resume the job
+    * look for `schedule` to set a cron-like schedule
+    * look for `concurrencyPolicy` to set whether you're ok with "overlapping" jobs
+    * look for `nodeSelector` to pick which k8s node you want to run your jobs on
+
+
