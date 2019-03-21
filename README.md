@@ -58,10 +58,15 @@ and the Kuul Images separate.  The Kuul Periodics system just runs the image and
 what it does.  I expect people to use the Kuul Periodics system but to have a separate repo
 and build process for their custom Kuul Images.
 
-Here's how you can build your own Kuul Image to do something simple:
+Here's how you can build your own Kuul Image to do something simple (i.e., print a message to
+the screen).
 
 * Make sure you have docker installed
 * Create your Dockerfile
+  * In the example Docker file, we have a ubuntu 16.04 container with user=ubuntu
+    and in the `/home/ubuntu/periodics`, we have some scripts:
+    * print_stuff.sh
+    * print_more.sh
 
 ```
 # Build the image using the tag "v3" for example.
@@ -135,6 +140,8 @@ The jobs are specified in yamls.  The lifecycle goes something like this:
   so that you can easily delete them by filtering them effectively (for example by using
   the `grep` command)
 * Instantiate that template
+  * See template.yaml in this repo
+  * See make.sh in this repo
 * `kubectl config use-context (aK8s)` for your Kuul k8s cluster
 * `kubectl apply -f .` your templates
 *   If a template needs changing, change it and "redeploy" your yamls
