@@ -167,7 +167,12 @@ If you want to:
 * edit the periodic jobs (including their schedule), just edit the CronJob construct using k9s
   * or `kubectl edit ...`
     * look for `suspend` variable set to `true` or `false` to suspend or resume the job
+      * kubectl patch cronjobs (aJobName) -p '{"spec" : {"suspend" : true }}'
+        * Currently running jobs will continue until done
+        * You can delete the job if you want to get rid of it immediately via `kubectl delete job`
+          and `kubectl delete po`
     * look for `schedule` to set a cron-like schedule
+      * `kubectl patch cronjobs (aJobName) -p '{"spec" : {"schedule" : "30 * * * *" }}'`
     * look for `concurrencyPolicy` to set whether you're ok with "overlapping" jobs
     * look for `nodeSelector` to pick which k8s node you want to run your jobs on
       * Use `kubectl label node --overwrite (aNode) myTag=label` to label your node
