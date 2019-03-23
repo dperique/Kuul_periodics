@@ -222,3 +222,11 @@ for i in $(kubectl get po -a| grep Completed|awk '{print $1}' | grep -e str1 -e 
   kubectl delete po $i
 done
 ```
+
+Ways to delete Jobs (not tested):
+
+```
+kubectl delete job $(kubectl get job -o=jsonpath='{.items[?(@.status.succeeded==1)].metadata.name}')
+kubectl get jobs --all-namespaces | sed '1d' | awk '{ print $2, "--namespace", $1 }'
+loop and delete the jobs
+```
