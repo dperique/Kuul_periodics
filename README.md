@@ -63,8 +63,9 @@ Here is a list of CronJob characteristics to keep in mind:
 * The Kubernetes Pod is the entity doing the actual work of running the script
 * If you delete a Pod in Running state, it will restart until the Pod gets to Complete state
 * If you want to stop a CronJob -- i.e., stop the Pod from running:
-  * Delete the CronJob (you may also be able to set the `Suspend` field to `true`)
+  * Delete the CronJob (or set the `Suspend` field to `true`)
   * Delete the Job that the CronJob started
+    * the pod will be Terminated
 
 
 ## Kuul Images
