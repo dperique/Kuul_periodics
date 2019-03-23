@@ -1,0 +1,28 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: THE_NAME
+  namespace: default
+spec:
+  schedule: "THE_MINUTE * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          nodeSelector:
+            kuul-type: periodic
+          securityContext:
+            runAsUser: 1000
+            fsGroup: 0
+          containers:
+          - name: THE_NAME
+            image: my.docker-registry.com/my-kuul-image:v1
+            imagePullPolicy: IfNotPresent
+            workingDir: "/home/ubuntu/periodics"
+            command: [ "./THE_SCRIPT", "THE_TARGET" ]
+          restartPolicy: Never
+          imagePullSecrets:
+            - name: mypullsecret
