@@ -79,51 +79,7 @@ and the Kuul Images separate.  The Kuul Periodics system just runs the image and
 what it does.  I expect people to use the Kuul Periodics system but to have a separate repo
 and build process for their custom Kuul Images.
 
-Here's how you can build your own Kuul Image to do something simple (i.e., print a message to
-the screen).
-
-* Make sure you have docker installed
-* Create your Dockerfile
-  * In the example Docker file, we have a ubuntu 16.04 container with user=ubuntu
-    and in the `/home/ubuntu/periodics`, we have some scripts:
-    * print_stuff.sh
-    * print_more.sh
-
-```
-# Build the image using the tag "v3" for example.
-#
-docker build -t kuul:v3 .
-
-# Run container build from the image as a daemon.
-#
-docker run --name mycont -d kuul:v3
-
-# Check the logs to see if it did the right thing.
-#
-docker logs mycont
-
-# Stop any container using the image (if there is one).
-#
-docker ps -a
-docker stop ...
-
-# Remove the container to cleanup.
-#
-docker rm ...
-
-# Remove the image if you don't want it anymore.
-#
-docker rmi ...
-
-# If your container is not doing what you want, debug, and repeat the
-# above.
-
-# Once satisfied with your container, push it to your docker registry.
-# I use my.docker-registry.com as an example.
-#
-docker build -t my.docker-registry.com/kuul:v3 .
-docker push my.docker-registry.com/kuul:v3
-```
+See the [Example Kuul Image](https://github.com/dperique/Kuul_image_example)
 
 ## Kuul k8s cluster
 
