@@ -119,7 +119,8 @@ and the Kuul Images separate.  The Kuul Periodics system just runs the image and
 what it does.  I expect people to use the Kuul Periodics system but to have a separate repo
 and build process for their custom Kuul Images.
 
-See the [Example Kuul Image](https://github.com/dperique/Kuul_image_example).
+See the [Example Kuul Image](https://github.com/dperique/Kuul_image_example) and how I built
+it and ran it on my Kuul k8s cluster.
 
 ## Kuul k8s cluster
 
