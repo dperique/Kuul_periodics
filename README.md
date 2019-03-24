@@ -246,6 +246,10 @@ This is how I check the labels on my k8s nodes:
 kubectl label node --overwrite node-1 myTag=periodic`
 kubectl label node --overwrite node-3 myTag=periodic`
 
+# Unlabel a node.
+#
+kubectl label node --overwrite node-3 myTag-`
+
 # Grep for the label quickly see what nodes are using that label.
 #
 for i in 1 2 3 4 5 ; do echo $i ;kubectl describe node node-$i | grep periodic ; done
