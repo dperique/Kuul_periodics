@@ -13,9 +13,11 @@ periodic "jobs".  This includes:
 * Running automated tests to ensure the your service is running well
 * Running automated backups of databases
 
-One tool that can be used is Zuul.  Zuul runs jobs on nodepool workers.  Nodepool workers
-are VMs spun up on Openstack clusters.  Jobs run on the nodepool workers and then they are
-destroyed and recycled for the next job.
+## Comparison with Zuul
+
+One tool that can be used for running periodic jobs is Zuul.  Zuul runs jobs on nodepool workers.
+Nodepool workers are VMs spun up on Openstack clusters.  Jobs run on the nodepool workers and
+then they are destroyed and recycled for the next job.
 
 Zuul can also do things like run CI tests on demand -- CI testing is a non-goal for the
 Kuul Periodics project.
@@ -23,6 +25,8 @@ Kuul Periodics project.
 Kubernetes is a nice platform for running containers.  My thought is that nodepool workers
 can be slimmed down into containers and instead of running VMs on Openstack, we can run the
 containers on Kubernetes -- hence the name "Kuul" as a play on the word "Zuul".
+
+## Where's the User Manual?
 
 The implementation of the Kuul project is really just another use of Kubernetes.  As such
 we can take advantage of the vast amount of documentation already in existence.  The only
