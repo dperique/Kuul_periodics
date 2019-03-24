@@ -1,4 +1,7 @@
-# Kuul Periodics
+# The Kuul Periodic System
+
+The "Kuul Periodic System" is a fancy name for a Kubernetes cluster that runs periodic
+jobs using Kubernetes CronJobs.
 
 ## The use-case
 
@@ -30,6 +33,14 @@ thing that is unique to each Kuul Periodics deployment is:
   * The images are just docker images that can be tested by running them using plain docker
 * the method used to deploy the CronJob yamls (a Kubernetes construct)
   * This can be automated or manual
+  * The "make.sh" file this repo is a rudimentary example of how to automate creating your
+    Kuul jobs.
+
+Learning how to use a Kuul Periodic System to run your jubs comes down to learning how to
+create, monitor, and manage Kubernetes CronJobs.  So, you are not going to find a comprehensive
+user manual specifically for the Kuul Periodic System.  If you don't know how to use Kubernetes
+and the kubectl command, you should stop here and learn that first (perhaps you can start
+with [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/).
 
 ## Jobs are implemented as Kubernetes CronJobs
 
