@@ -26,6 +26,28 @@ Kubernetes is a nice platform for running containers.  My thought is that nodepo
 can be slimmed down into containers and instead of running VMs on Openstack, we can run the
 containers on Kubernetes -- hence the name "Kuul" as a play on the word "Zuul".
 
+## Why Not Just Run Cron?
+
+I ran Linux cron -- for a while.  I had several Ubuntu VMs with cron installed and ran various
+jobs on them.  This worked out well for a while.
+Eventually, as the number of jobs grew, I started writing scripts to tell what jobs were
+running on what VMs; the script kept track of the IPs of the VMs.  I then had to deal with
+coordinating things so I don't accidentally
+run the same job on more than one machine.  I also had to fight with cron because it will
+run another instance of a jobs regardless of whether its finished or not.  The turning point
+for me was when I ran out of
+VMs to run jobs and needed to spin up more since running more than one job on a VM was not
+an option because the jobs were using the `/tmp` directory and "colliding" with each other.
+The management of the cron jobs and VMs was getting very cumbersome.
+
+So my next step was to containerize my jobs.  This worked out well but then I was creating
+multiple containers on the VMs and having to manage even more things (VMs and containers).
+This was when I decided to use the idea of the "Kuul Periodic System".
+
+Kubernetes manages my job containers as Pods running on Kubernetes nodes.  My Ubuntu VMs
+have since been converted over to Kubernetes nodes.  Now, I let Kubernetes manage my
+VMs and jobs.
+
 ## Where's the User Manual?
 
 The implementation of the Kuul project is really just another use of Kubernetes.  As such
