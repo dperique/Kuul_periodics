@@ -48,10 +48,11 @@ The periodic jobs are implemented as Kubernetes CronJobs.  This allow us to:
   and it's time to launch another job, cron will launch it regardless of if the current job
   is running or not.
 * Use `kubectl editi ...` or `kubectl apply ...` to
-  * Suspend periodic jobs by changing the `suspend` pod parameter. This allows us to
+  * Suspend periodic jobs by changing the `suspend` CronJob parameter. This allows us to
     quickly suspend and resume jobs for scheduling.  This is useful when you need to perform
     maintenance and want to stop running the periodic jobs and then to resume them when the
-    maintenance is complete.
+    maintenance is complete.  If a CronJob is set to suspended, it remains suspended even if
+    the yaml is re-applied using kubectl.
 * Change the job schedule by changing the `schedule` parameter.  This is useful when you want
   to run a job immediately to debug it (just change the `schedule` parameter to the next minute)
   or when you want to just re-arrange the schedule.
