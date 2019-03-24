@@ -238,6 +238,12 @@ If you want to:
 
 ## Utilities
 
+This is how you can sort by the schedule:
+
+```
+kubectl get cronjob -o wide --sort-by=.spec.schedule
+```
+
 This is how I check the labels on my k8s nodes:
 
 ```
