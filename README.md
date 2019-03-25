@@ -105,6 +105,11 @@ Here is a list of CronJob characteristics to keep in mind:
   * Delete the CronJob (or set the `Suspend` field to `true`)
   * Delete the Job that the CronJob started
     * the Pod will be Terminated
+* If the container image is such that when the job "fails", have some way to report failure
+  (e.g., report in a slack channel or log) but do NOT `exit 1` in the Pod -- if you do, the
+  job will end with status of Error and will run again and repeat until a return code of
+  0 is returned.  I'm still experimenting to see if this implies anything but a return code
+  of 0 is ok.
 
 
 ## Kuul Images
