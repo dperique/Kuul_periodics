@@ -68,6 +68,8 @@ user manual specifically for the Kuul Periodic System.  If you don't know how to
 and the kubectl command, you should stop here and learn that first (perhaps you can start
 with [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/).
 
+Here's a [doc on Kubernetes CronJobs](https://unofficial-kubernetes.readthedocs.io/en/latest/concepts/jobs/cron-jobs/)
+
 ## Jobs are implemented as Kubernetes CronJobs
 
 The periodic jobs are implemented as Kubernetes CronJobs.  This allow us to:
@@ -286,3 +288,16 @@ kubectl delete job $(kubectl get job -o=jsonpath='{.items[?(@.status.succeeded==
 kubectl get jobs --all-namespaces | sed '1d' | awk '{ print $2, "--namespace", $1 }'
 loop and delete the jobs
 ```
+
+## TODO
+
+Some thoughts about things I want to add here:
+
+* Explore `activeDeadlineSeconds` so that I can limit how long a job runs. Need to test it to ensure
+  it actually works as expected.
+* Explore `startDeadlineSeconds` so that we can only run jobs when there's enough time so they don't
+  collide with other jobs that happen after that job.  For example, a deploy job runs top of hour and
+  test job runs at bottom of hour and deploy job takes max of 20 minutes to run, we can set
+  `startDeadlineSeconds` to 600.
+* Add example of schedule setting to run a job hourly between the hours of x and y.
+  * Something like "30 23,00,01,02,03 * * *" to run a job every hour starting 11:30pm to 3:30pm
