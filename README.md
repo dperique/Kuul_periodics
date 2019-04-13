@@ -242,6 +242,17 @@ If you want to:
       * if the number you set is less than the current number of Jobs retained, old Jobs/Pods are removed
   * Edit your template(s) and then run `kubectl apply -f ...`
 
+## Production Kuul Periodic Systems: use Service Account
+
+For production systems, make it so that the default access is read-only as you don't
+want just anybody going in there and making arbitrary changes.
+
+You can do this by applying the kuul-service-account.yaml (after filling it in with your
+Kuul k8s cluster name).  The concept is borrows heavily from this
+[script for adding k8s read-only access](https://github.com/dperique/Kubernetes_clusterrole).
+
+The idea is to create a service account which is tied to a ClusterRole with limited privileges and
+then build a kubectl context using that.
 
 ## Utilities
 
