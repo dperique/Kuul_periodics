@@ -366,5 +366,3 @@ Some thoughts about things I want to add here:
   collide with other jobs that happen after that job.  For example, a deploy job runs top of hour and
   test job runs at bottom of hour and deploy job takes max of 20 minutes to run, we can set
   `startDeadlineSeconds` to 600.
-* Add example of schedule setting to run a job hourly between the hours of x and y.
-  * Something like "30 23,00,01,02,03 * * *" to run a job every hour starting 11:30pm to 3:30pm
