@@ -217,6 +217,18 @@ In order to monitor the Pods in a more user friendly way, we can use the
 or a tool like [k9s](https://github.com/derailed/k9s). But either way, you are still using
 the Kubernetes apiserver (e.g., `kubectl` command) to manage the Jobs.
 
+In my opinion, because the Kuul Periodic System will be used to run your periodic jobs
+and because (for the most part), no one really cares how it's implemented, you will want
+to use a simple UI that allows you to monitor or trigger jobs.  In this case, I highly
+recommend you use something like k9s.
+
+In my case, I created a Kuul Periodic System (k8s cluster) with 3 Kubernetes masters, setup
+3 machines running k9s and let users monitor the jobs like that.  Each machine sends
+Kubernetes apiserver calls to a different Kubernetes master (to help spread the load).
+This avoids users having to install k9s and gives a single and simple UI.  The machines are
+setup so that when you login, you can have a read-only user (for those who just want to
+watch and view logs) and a read-write user (for those who want to delete/add/trigger jobs).
+
 If you want to:
 
 * see the logs of running Jobs, use k9s commands to see the logs
@@ -299,6 +311,50 @@ kubectl delete job $(kubectl get job -o=jsonpath='{.items[?(@.status.succeeded==
 kubectl get jobs --all-namespaces | sed '1d' | awk '{ print $2, "--namespace", $1 }'
 loop and delete the jobs
 ```
+
+## Appendix: Kuul Periodic System Maintenance
+
+The Kuul Peridic System will keep running but will need regular maintenance to avoid clutter.
+
+Specifically:
+
+* When people manually trigger jobs, they need to clean them up after they are done
+* If there are Error Pods, they need to be cleaned up eventually
+
+Once in a while, look at all the CronJobs to see the "Last Scheduled" time
+for each CronJob.  If you jobs should run hourly, you need to ensure that the last scheduled time
+does not exceed an hour.  If it does, this means a job has not been scheduled (which implies
+someone needs to look into it).
+
+Check the logs for the Kubernetes controller pods in the kube-system namespace.  Ensure there are
+no jobs being skipped.  If there are skipped jobs, delete and re-apply them will usually fix the
+problem.  If not, you'll have to do some debugging.
+
+* kubectl delete/applying of the CronJob usually fixes the problem
+* In the future, we may consider setting`startDeadlineSeconds` to account for clock skew in case
+  that's the reason a Cronjob was not triggered.
+
+We have seen a symptom where after getting logs on a live Pod running a script (by pressing the
+lowercase L in k8s), we see an error like `failed to watch file
+"/var/log/pods/91149b09-66c4-11e9-abd5-06bc3661cf0f/k8s-lon04/0.log":
+no space left on device`.  We have not determined the root cause but highly suspect that it's
+due to some resource not being free'ed (including inodes in the filesysem).  Remember, the Kuul
+Periodic System is constantly starting and deleting Jobs/Pods so leaks are more easily exposed.
+
+* We have found the best way to mitigate this problem is to cordon the worker k8s node having
+  this problem, wait for all Pods to finish running, reboot, and uncordon.
+* To be proactive about this problem and prevent it altogether, you can cordon/wait/reboot/uncordon
+  any of the Kuul worker nodes regularly to keep them fresh.
+
+* Every N days, the k8s worker nodes will get to about 80% disk usage resulting in "disk pressure" events
+  on the node.  This is normal because Kubernetes is constantly running jobs and has to do garbage
+  collection for dead Pods (i.e., finished Jobs).  Kubernetes will attempt to cleanout unused images and
+  free space.  I have seen happen several times and each time, I did nothing.  In once case, I saw the
+  k8s worker node diskspace usage go from 80% to around 29%.
+
+  * To help reduce any stress from seeing the events, we use k8s worker nodes with a good amount of
+    disk space; this symptom will not disappear but take longer to happen and when it does happen,
+    there will be much more disk to use during the automatic recovery.
 
 ## TODO
 
