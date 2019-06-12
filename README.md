@@ -318,8 +318,12 @@ The Kuul Peridic System will keep running but will need regular maintenance to a
 
 Specifically:
 
-* When people manually trigger jobs, they need to clean them up after they are done
-* If there are Error Pods, they need to be cleaned up eventually
+* When people manually trigger jobs, delete them after they are done
+* If there are Error Pods, delete them eventually
+* Check the list of Jobs and see what's been around and for how long.  Delete Jobs that have
+  been around for many days and show completions of "0/1".  Jobs that didn't complete were
+  probably due to an error condition which may have been corrected many days ago.  if the
+  "0/1" jobs keep showing up, investigate and fix it.
 
 Once in a while, look at all the CronJobs to see the "Last Scheduled" time
 for each CronJob.  If you jobs should run hourly, you need to ensure that the last scheduled time
@@ -330,7 +334,7 @@ Check the logs for the Kubernetes controller pods in the kube-system namespace. 
 no jobs being skipped.  If there are skipped jobs, delete and re-apply them will usually fix the
 problem.  If not, you'll have to do some debugging.
 
-* kubectl delete/applying of the CronJob usually fixes the problem
+* kubectl delete/apply of the CronJob usually fixes the problem
 * In the future, we may consider setting`startDeadlineSeconds` to account for clock skew in case
   that's the reason a Cronjob was not triggered.
 
@@ -355,6 +359,28 @@ Periodic System is constantly starting and deleting Jobs/Pods so leaks are more 
   * To help reduce any stress from seeing the events, we use k8s worker nodes with a good amount of
     disk space; this symptom will not disappear but take longer to happen and when it does happen,
     there will be much more disk to use during the automatic recovery.
+
+Automated Maintenance:
+
+* Shut down the Kuul Periodic System for maintenance and delete/apply every
+  job regularly (e.g., every week depending on how often kube controller problems happen).
+  Delete and re-apply all CronJobs while preserving the "suspend" state of each job.  This will
+  proactively address any kube controller issues.
+
+* Cordon one worker node every few days and after some
+  amount of time, reboot/uncordon it.  The time to wait can be something that guarantees no jobs
+  are running (e.g., if you run periodic jobs that take 20 minutes, then wait 3 hours) or you
+  can check for any running Pods (preferred approach) before rebooting.  Do this
+  for every node and you may never see the "no space left" symptom.
+
+* Delete all manually triggered Jobs and Pods after a certain age regularly.
+
+* Look for Error Pods and report them regularly; this will help alert someone to investigate
+  them close to when they happen so you can debug symptoms soon after they occur.
+
+* Create a "check_jobs" CronJob that checks various things to ensure your Kuul Periodic System
+  is running well.  For example, check to see that there are N jobs completed every hour.  If
+  not all jobs are accounted for, this will let you know something is wrong.
 
 ## TODO
 
